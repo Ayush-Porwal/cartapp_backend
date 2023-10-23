@@ -2,27 +2,50 @@ package db
 
 import (
 	"context"
-	"os"
 
-	"github.com/jackc/pgx/v5"
-	"github.com/joho/godotenv"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func ConnectDb() error {
+var dbpool *pgxpool.Pool;
 
-	err := godotenv.Load();
+func InitializeDBPool(connectionURL string) (*pgxpool.Pool, error) {
+	dbconfig, err := pgxpool.ParseConfig(connectionURL);
 	
 	if err != nil {
-		return err;
-    }
-	
-	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"));
+		return nil, err;
+	}
+
+	dbpool, err := pgxpool.NewWithConfig(context.Background(), dbconfig);
 
 	if err != nil {
-		return err;
-    }
+		return nil, err;
+	}
 
-    defer conn.Close(context.Background());
-	
-	return nil;
+	// defer dbpool.Close();
+
+	return dbpool, err;
 }
+
+
+// func GetDBPool() *pgxpool.Pool {
+// 	return dbpool;
+// }
+
+// func ConnectDb() (*pgx.Conn, error) {
+
+// 	err := godotenv.Load();
+	
+// 	if err != nil {
+// 		return nil, err;
+//     }
+	
+// 	conn, err := pgx.Connect(context.Background(), os.Getenv("DATABASE_URL"));
+
+// 	if err != nil {
+// 		return nil, err;
+//     }
+
+//     defer conn.Close(context.Background());
+	
+// 	return conn, nil;
+// }

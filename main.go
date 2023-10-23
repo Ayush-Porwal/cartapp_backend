@@ -9,14 +9,21 @@ import (
 	"github.com/Ayush-Porwal/cartapp_backend/routers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+
+	err := godotenv.Load();
 	
-	err := db.ConnectDb();
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading .env file: %v", err);
+    }
+	
+	dbpool, err := db.InitializeDBPool(os.Getenv("DATABASE_URL"));
 
 	if err != nil  {
-		fmt.Fprintf(os.Stderr, "Could not connect to database: %v\n", err);
+		fmt.Fprintf(os.Stderr, "Could not open a connection pool to database: %v\n", err);
 	}
 
 	router := chi.NewRouter();
@@ -24,8 +31,8 @@ func main() {
 	router.Use(middleware.Logger);
 	
 	// mounting the routes
-	router.Mount("/cart", routers.Cart());
-	router.Mount("/products", routers.Products());
+	router.Mount("/cart", routers.Cart(dbpool));
+	router.Mount("/products", routers.Products(dbpool));
 
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, World!"))
